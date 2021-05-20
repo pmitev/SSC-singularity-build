@@ -1,0 +1,5 @@
+#!bin/bash
+
+RBS_HOST="http://xxx.xxx.xx.xxx:xxxx"
+
+curl -X POST ${RBS_HOST}/build -F sif_name="${1}" -F sif_recipe="${2}" -F "files[]=@${2}" -F=${USER}
