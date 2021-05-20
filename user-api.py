@@ -22,8 +22,8 @@ def build(file_element_name="files[]"):
     files = request.files.getlist(file_element_name)
     try:
       user_id=    request.form["user_id"]
-      sif_name=   os.path.join(app.config['UPLOAD_FOLDER'], request.form["sif_name"])
-      sif_recipe= os.path.join(app.config['UPLOAD_FOLDER'], request.form["sif_recipe"])
+      sif_name=   os.path.join(app.config['UPLOAD_FOLDER'],  user_id, request.form["sif_name"])
+      sif_recipe= os.path.join(app.config['UPLOAD_FOLDER'],  user_id, request.form["sif_recipe"])
     except:
       print("Wrong sif_name sif_recipe")
       response= make_response('Wrong sif_name or sif_recipe', 404)
@@ -43,25 +43,30 @@ def build(file_element_name="files[]"):
       except OSError as e:
         flash("ERROR writing file " + filename + " to disk: " + StringIO(str(e)).getvalue()) 
 
-    cmd_txt= f"sudo sigularity build {sif_name} {sif_recipe} > {user_folder}/{sif_recipe}.log"
+    cmd_txt= f"sudo singularity build -F {sif_name} {sif_recipe}"
     cmd=shlex.split(cmd_txt)
     print(">>> cmd: " + cmd_txt)
 
-    #proc= subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    flog= open(f"{sif_recipe}.log","w")
+    proc= subprocess.Popen(cmd, stdout=flog, stderr=flog, close_fds=True)
     #stdout, stderr = proc.communicate()
     #print(stdout.decode())
     #print(stderr.decode())
 
-  return redirect(url_for("build_log"))
+  #return redirect(url_for("build_log"))
+  response= make_response("Starting build...", 200)
+  response.mimetype = "text/plain"
+  return response
 
 
 @app.route("/build_log", methods=['GET'])
 def build_log():
+
   
   response_tmp= Template("${stdout}\nDone").substitute(stdout=stdout.decode(), stderr=stderr.decode)
   response= make_response(response_tmp, 200)
   response.mimetype = "text/plain"
-  return 
+  return response
 
 
 #=======================================================================================
